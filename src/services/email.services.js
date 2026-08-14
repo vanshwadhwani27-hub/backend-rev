@@ -48,6 +48,28 @@ async function sendRegistrationEmail(userEmail, name){
     console.log("there's an issue in OAuth so mail couldnt be send")
 }
 
+async function sendTransactionEmail(username, name, amount, toAccount){
+    // const subject = "welcome to bank";
+    // const text = "thank you for registration"
+    // const html = ""
+
+    // await sendEmail( userEmail, subject, text, html )
+
+    console.log("there's an issue in OAuth so mail couldnt be send")
+}
+
+async function sendTransactionFailureEmail(username, name, email, toAccount){
+    // const subject = "welcome to bank";
+    // const text = "thank you for registration"
+    // const html = ""
+
+    // await sendEmail( userEmail, subject, text, html )
+
+    console.log("there's an issue in OAuth so mail couldnt be send")
+}
+
 module.exports = {
-    sendRegistrationEmail
+    sendRegistrationEmail,
+    sendTransactionEmail,
+    sendTransactionFailureEmail
 };

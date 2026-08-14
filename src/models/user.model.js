@@ -20,6 +20,12 @@ const userModel = new mongoose.Schema({
         minLength: [8,"password length should be greater than 7"],
         maxLength: [32,"password length should be less than 33"],
         select: false
+    },
+    systemUser: {
+        type: Boolean,
+        default: false,
+        immutable: true,
+        select: false
     }
 },{
     timestamps: true
