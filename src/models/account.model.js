@@ -1,7 +1,28 @@
 const mongoose = require("mongoose")
 
-const accountModel = new mongoose.Schema({
-
+const accountSchema = new mongoose.Schema({
+    user:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: [true, "account should have a valid object id"],
+        index: true
+    },
+    status:{
+        type: String,
+        enum: ["ACTIVE", "FROZEN", "CLOSED"],
+        default: "ACTIVE"
+    },
+    currency:{
+        type: String,
+        required: [true, "currency is required to create an account"],
+        default: "INR"
+    }
+},{
+    timestamps: true
 })
 
-module.exports = mongoose.model("Account",accountModel)
+accountSchema.index({ user: 1,status: 1})
+
+
+const accountModel = mongoose.model("Account",accountSchema)
+module.exports = accountModel
