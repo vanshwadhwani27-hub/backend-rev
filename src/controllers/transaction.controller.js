@@ -30,9 +30,15 @@ async function createTransaction(req, res){
     })
     
 
-    if(!fromUserAccount || !toUserAccount){
+    if(!fromUserAccount){
         return res.status(400).json({
-            message: "error in from account or to account"
+            message: "fromAccount was not found"
+        })
+    }
+
+    if(!toUserAccount){
+        return res.status(400).json({
+            message: "toAccount was not found"
         })
     }
 
@@ -98,27 +104,31 @@ async function createTransaction(req, res){
     session.startTransaction()
 
     try {
-    const transaction = await transactionModel.create({
+    const transaction = new transactionModel({
         fromAccount,
         toAccount,
         amount: Number(amount),
         idempotencyKey,
         status: "PENDING"
-    },{ session })
+    })
 
-    const debitLedgerEntry = await ledgerModel.create({
+    const debitLedgerEntry = await ledgerModel.create([{
         account: fromAccount,
         amount: Number(amount),
         transaction: transaction._id,
         type: "DEBIT"
-    },{ session })
+    }],{ session })
 
-    const creditLedgerEntry = await ledgerModel.create({
+    await (() => {
+        return new Promise((resolve) => setTimeout(resolve,100))
+    })()
+
+    const creditLedgerEntry = await ledgerModel.create([{
         account: toAccount,
         amount: Number(amount),
         transaction: transaction._id,
         type: "CREDIT"
-    },{ session })
+    }],{ session })
 
     transaction.status = "COMPLETED"
     await transaction.save({ session })
