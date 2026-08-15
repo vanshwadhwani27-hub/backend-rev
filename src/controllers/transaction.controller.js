@@ -28,7 +28,7 @@ async function createTransaction(req, res){
     const toUserAccount = await accountModel.findOne({
         _id: toAccount
     })
-    
+
 
     if(!fromUserAccount){
         return res.status(400).json({
@@ -100,17 +100,17 @@ async function createTransaction(req, res){
         })
     }
 
+    try {
     const session = await mongoose.startSession()
     session.startTransaction()
 
-    try {
-    const transaction = new transactionModel({
+    const transaction = (await transactionModel.create({
         fromAccount,
         toAccount,
         amount: Number(amount),
         idempotencyKey,
         status: "PENDING"
-    })
+    },{ session }))[0]
 
     const debitLedgerEntry = await ledgerModel.create([{
         account: fromAccount,
@@ -120,7 +120,7 @@ async function createTransaction(req, res){
     }],{ session })
 
     await (() => {
-        return new Promise((resolve) => setTimeout(resolve,100))
+        return new Promise((resolve) => setTimeout(resolve,5 * 1000))
     })()
 
     const creditLedgerEntry = await ledgerModel.create([{
@@ -130,8 +130,12 @@ async function createTransaction(req, res){
         type: "CREDIT"
     }],{ session })
 
-    transaction.status = "COMPLETED"
-    await transaction.save({ session })
+    
+    await transactionModel.findOneAndUpdate(
+        { _id: transaction._id },
+        { status: "COMPLETED" },
+        { session }
+    )
 
     await session.commitTransaction()
 
@@ -147,9 +151,15 @@ async function createTransaction(req, res){
         transaction: transaction
     })
     } catch (err) {
-        await session.abortTransaction()
+
+        await transactionModel.findOneAndUpdate(
+            { idempotencyKey: idempotencyKey },
+            { status: "FAILED"}
+        )
+
         return res.status(500).json({
-            message: "transaction could not be completed"
+            message: "transaction could not be completed",
+            err: err.message
         })
     } finally {
         await session.endSession()
